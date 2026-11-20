@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { ComingSoon, iconBtn, Screen } from "@/components/screen";
 import { customerLabel, floorText, rs, type Customer } from "@/lib/customers";
 import { createClient } from "@/lib/supabase/server";
+import { todayPK } from "@/lib/dates";
+import type { Delivery } from "@/lib/deliveries";
+import { CustomerEntries } from "./entries";
 
 const editIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-5.5" aria-hidden>
@@ -13,7 +16,18 @@ const editIcon = (
 export default async function CustomerPage(props: PageProps<"/customers/[id]">) {
   const { id } = await props.params;
   const supabase = await createClient();
-  const { data } = await supabase.from("customer_list").select("*").eq("id", id).maybeSingle();
+  const today = todayPK();
+  const [{ data }, { data: entries }] = await Promise.all([
+    supabase.from("customer_list").select("*").eq("id", id).maybeSingle(),
+    supabase
+      .from("deliveries")
+      .select("id, customer_id, date, qty, empties_returned, rate, amount")
+      .eq("customer_id", id)
+      .is("deleted_at", null)
+      .gte("date", today.slice(0, 7) + "-01")
+      .order("date")
+      .order("created_at"),
+  ]);
   if (!data) notFound();
   const c: Customer = data;
   const b = c.balance;
@@ -47,8 +61,8 @@ export default async function CustomerPage(props: PageProps<"/customers/[id]">) 
         </div>
       </section>
 
-      <ComingSoon phase={3} what="Add bottles and empties for this customer." />
-      <ComingSoon phase={4} what="Payments and the full register with running balance." />
+      <CustomerEntries customer={c} entries={(entries ?? []) as Delivery[]} today={today} />
+      <ComingSoon phase={4} what="Payments, earlier months, and the full register with running balance." />
     </Screen>
   );
 }

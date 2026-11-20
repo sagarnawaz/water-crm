@@ -38,7 +38,7 @@ Each phase ends with a preview deploy and the checks listed for it.
   - The floor price appears in the form.
 - **Deliverable:** the Customers and Settings screens.
 
-### Phase 3 — Bottle entries
+### Phase 3 — Bottle entries ✅ (browser test passing; "Paid now?" for daily customers moves to Phase 4 with payments)
 - **Goal:** daily deliveries are recorded fast and correctly.
 - **Features:**
   - Today screen: quick confirm, "No delivery", date switcher.

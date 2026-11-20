@@ -2,7 +2,7 @@
 
 A mobile-first web app that replaces the paper register for small water supply businesses in Pakistan. It records bottles delivered, empties collected and payments received, and works out each customer's balance.
 
-**Status:** Phases 1–2 are built: login, a database where each business sees only its own data, customers, and floor prices. Phase 3 (bottle entries) is next.
+**Status:** Phases 1–3 are built: login, a database where each business sees only its own data, customers, floor prices, and daily bottle entries. Phase 4 (payments and ledger) is next.
 
 ## Docs
 | Doc | What it covers |
@@ -30,6 +30,7 @@ Needs Node 24+ and a free [Supabase](https://supabase.com) project. Use a separa
 | `npm run dev` | Start the app locally |
 | `npm test` | Fast tests with no database (phone numbers, customer form and floor price rules) |
 | `npm run test:db` | Checks against your staging Supabase that one business can't see or change another's data, plus the database rules |
+| `npm run test:e2e` | Browser test at phone width: login → customer → bottles on Today → edit → delete (staging only; first run `npx playwright install chromium`) |
 | `npm run build` | Production build |
 | `npm run create-owner -- "Name" 03xx-xxxxxxx "password"` | Create a business and its owner login |
 

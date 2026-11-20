@@ -23,6 +23,8 @@ These rules decide money. Any change needs the owner's approval and an update to
 
 ## Bottle entries
 - **A usual quantity is only a suggestion.** Nothing is billed until the owner confirms an entry. The app never creates entries automatically.
+- "No delivery" on the Today screen only hides the customer from the "To enter" list. It bills nothing, and it is remembered on that phone only, not in the database.
+- Editing an entry changes its date, bottles and empties, never its saved price.
 - A customer can have **more than one entry on the same day** (for example 2 bottles in the morning and 1 in the evening). Each delivery is saved as its own entry. The app shows a note when the date already has an entry, but does not block it.
 - An entry records `qty` (full bottles delivered) and `empties_returned`.
 - `qty >= 0`, `empties_returned >= 0`, and `qty + empties_returned > 0`. An entry with `qty = 0` is an "empties pickup" and costs nothing.

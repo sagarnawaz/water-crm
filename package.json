@@ -10,7 +10,8 @@
     "lint": "eslint",
     "test": "node --test \"tests/*.test.ts\"",
     "test:db": "node --env-file=.env.local --test tests/rls.test.mjs",
-    "create-owner": "node --env-file=.env.local scripts/create-owner.mjs"
+    "create-owner": "node --env-file=.env.local scripts/create-owner.mjs",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -20,6 +21,7 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
