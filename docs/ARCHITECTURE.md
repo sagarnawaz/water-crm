@@ -19,8 +19,9 @@ Not used: a separate API server, an ORM, a state library, a UI kit, payment SDKs
 - An automated test proves that user A can't read or write business B's rows.
 
 ## Authentication
-- **Phone number + password** (Supabase Auth).
-- We create the accounts with the Supabase admin API and `phone_confirm: true`. No SMS is sent, so there is no SMS cost.
+- **Phone number + password.** The phone number is normalised to `923XXXXXXXXX` and stored in Supabase Auth as the email `923XXXXXXXXX@phone.paani-register.app` (see `src/lib/phone.ts`). That way no SMS provider is needed and there is no SMS cost. No email is ever sent.
+- We create the accounts with `npm run create-owner` (Supabase admin API, `email_confirm: true`). Public sign-up is turned off in the Supabase dashboard.
+- The Next.js `src/proxy.ts` refreshes the session on every request and redirects logged-out visitors to `/login`.
 - No self sign-up in Phase 1. Password resets are done by us. SMS OTP reset is a later add-on.
 - Phase 1 has one role, `owner`.
 

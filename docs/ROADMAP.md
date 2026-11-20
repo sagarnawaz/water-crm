@@ -8,7 +8,7 @@ Each phase ends with a preview deploy and the checks listed for it.
 - **Deliverable:** the clickable mockup at https://claude.ai/artifact/YWB7tf3vvb9WEhe3gwmQ9Q.
 - **Acceptance:** the owner signs off on the flows. Their decisions are recorded in [DECISIONS.md](DECISIONS.md).
 
-### Phase 1 — Foundation
+### Phase 1 — Foundation (built; waiting on Supabase project for `test:db` and deploy)
 - **Goal:** a secure, empty app the owner can log into.
 - **Features:**
   - Next.js + TypeScript + Tailwind scaffold.
