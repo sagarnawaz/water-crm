@@ -8,7 +8,7 @@ Each phase ends with a preview deploy and the checks listed for it.
 - **Deliverable:** the clickable mockup at https://claude.ai/artifact/YWB7tf3vvb9WEhe3gwmQ9Q.
 - **Acceptance:** the owner signs off on the flows. Their decisions are recorded in [DECISIONS.md](DECISIONS.md).
 
-### Phase 1 — Foundation (built; waiting on Supabase project for `test:db` and deploy)
+### Phase 1 — Foundation ✅ (Vercel deploy still to do)
 - **Goal:** a secure, empty app the owner can log into.
 - **Features:**
   - Next.js + TypeScript + Tailwind scaffold.
@@ -23,7 +23,7 @@ Each phase ends with a preview deploy and the checks listed for it.
   - The RLS test passes: user A can't read or write business B.
 - **Deliverable:** a deployed shell on Vercel.
 
-### Phase 2 — Customers and floor prices
+### Phase 2 — Customers and floor prices ✅ (built; owner click-through pending)
 - **Goal:** the owner can enter their customer list.
 - **Features:**
   - Settings floor price list.

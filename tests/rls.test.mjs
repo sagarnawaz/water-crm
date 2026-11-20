@@ -116,6 +116,29 @@ test("inactive customers can't get deliveries; duplicates and bad values are rej
   assert.ok(month.error, "for_month must be the 1st of a month");
 });
 
+test("customer_list: balance and bottles at home are calculated, deleted rows excluded", { skip }, async () => {
+  const { data: c } = await A.client
+    .from("customers")
+    .insert({ house_no: "45-C", floor: "Ground", area: "Street 11", opening_balance: 600, opening_bottles: 2, custom_rate: 100 })
+    .select("id")
+    .single();
+  const row = (qty, e) => ({ id: randomUUID(), customer_id: c.id, date: "2026-11-20", qty, empties_returned: e });
+  const kept = [row(2, 2), row(1, 0), row(0, 1)]; // two deliveries the same day + an empties pickup
+  const deleted = row(5, 0);
+  assert.ifError((await A.client.from("deliveries").insert([...kept, deleted])).error);
+  await A.client.from("deliveries").update({ deleted_at: new Date().toISOString() }).eq("id", deleted.id);
+  assert.ifError(
+    (await A.client.from("payments").insert({ id: randomUUID(), customer_id: c.id, date: "2026-11-20", amount: 1000, method: "cash_owner" })).error,
+  );
+
+  const { data } = await A.client.from("customer_list").select("rate, balance, bottles_at_home").eq("id", c.id).single();
+  // 600 + (2+1)×100 − 1000 = −100 (advance); bottles 2 + 3 − 3 = 2
+  assert.deepEqual(data, { rate: 100, balance: -100, bottles_at_home: 2 });
+
+  const { data: other } = await A.client.from("customer_list").select("id").eq("id", bCustomerId);
+  assert.equal(other.length, 0, "the view must respect RLS");
+});
+
 test("logged-out visitors read nothing", { skip }, async () => {
   const anon = createClient(URL, ANON, opts);
   const { data } = await anon.from("customers").select("id");

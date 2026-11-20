@@ -72,17 +72,17 @@ audit_log    (id bigserial pk, business_id uuid, table_name text, row_id uuid,
               -- written by a trigger on customers, deliveries, payments, floor_prices
 ```
 
-Views (calculated, never stored; see [BUSINESS_RULES.md](BUSINESS_RULES.md#calculations)):
-- `customer_balances`: balance and bottles at home for each customer.
+Views (calculated, never stored; see [BUSINESS_RULES.md](BUSINESS_RULES.md#calculations)). All of them use `security_invoker`, so RLS still applies:
+- `customer_list` (built in Phase 2): every customer column plus the current `rate`, the `balance` and `bottles_at_home`.
 - `ledger_lines`: deliveries and payments merged, with a running balance from a window function.
 - `monthly_statements`: opening, bottles, empties, billed, paid, closing, and the bill's `paid_for` and `left`, per customer per month.
 
 At about 100 customers × 30 rows a month, plain views are fast enough. If they ever get slow, add a materialized monthly table then.
 
 ## Validation (three layers)
-1. **Zod** on the client, for instant messages.
-2. The **same Zod schema** in the server action.
-3. **DB constraints** (checks, unique indexes, RLS) as the final safety net.
+1. **In the browser:** HTML `required`/`inputMode`, plus live checks in the form (duplicate address, floor price preview).
+2. **In the server action:** plain parse functions in `src/lib/customers.ts` (`parseCustomer`, `parseFloorPrices`). These are unit-tested in `tests/customers.test.ts`. Zod was skipped because a few small functions do the job without another dependency.
+3. **In the database:** checks, unique indexes and RLS as the final safety net.
 
 ## PWA and offline
 - Web manifest, icons, and a minimal service worker that caches the app shell. Installable on Android Chrome and iOS Safari.
