@@ -3,12 +3,16 @@
 For whoever runs Paani Register: deploying it, adding businesses, and keeping the data safe.
 
 ## 1. Production database
-Use a **separate Supabase project for production**, not the staging one used for development and tests. The tests create and delete temporary accounts, so they must never run against real customer data.
+**Current decision (21 Nov 2026):** the launch uses the **same Supabase project** that development used. All migrations are already applied there.
 
-1. Create a new Supabase project, for example `paani-register-prod`, in the region closest to Pakistan (Singapore or Mumbai).
-2. In the **SQL Editor**, run every file in `supabase/migrations/` in filename order.
-3. Go to **Authentication → Sign In / Providers**. Turn off **Allow new users to sign up** and keep **Email** enabled.
-4. Keep the database password in a password manager. You need it for backups.
+What this means:
+- `npm run test:db` and `npm run test:e2e` run against the live database. They create their own temporary business, can't see other businesses' data (RLS), and delete everything they made when they finish. If a test is stopped halfway, a business named "RLS test …", "E2E Test Supply" or "Smoke Test Supply" may be left behind. Delete it in Supabase (Table Editor → businesses) and its login (Authentication → Users).
+- Before onboarding the first real client, delete any test businesses and logins you made by hand (for example "Test Supply").
+- Moving to a separate production project later: create a new project in Singapore or Mumbai, run every file in `supabase/migrations/` in filename order, move the data with the backup/restore steps (section 5), and update the two Vercel variables.
+
+Either way:
+1. **Authentication → Sign In / Providers**: **Allow new users to sign up** must be off, and **Email** must stay on.
+2. Keep the database password in a password manager. You need it for backups.
 
 ## 2. Deploy to Vercel
 No domain is needed. Vercel gives a free `https://<name>.vercel.app` address, and you can add a domain later under Project → Settings → Domains.
