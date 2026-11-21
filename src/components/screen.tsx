@@ -38,7 +38,7 @@ export function Screen({
   );
 }
 
-export const iconBtn = "grid size-11 flex-none place-items-center rounded-xl border border-line bg-surface";
+export const iconBtn = "print:hidden grid size-11 flex-none place-items-center rounded-xl border border-line bg-surface";
 export const btn = "inline-flex min-h-13 items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 font-semibold";
 export const btnPrimary = "inline-flex min-h-13 items-center justify-center gap-2 rounded-xl bg-accent px-4 font-semibold text-accent-ink disabled:opacity-50";
 export const input = "min-h-13 w-full rounded-xl border border-line bg-surface px-3.5 text-[17px] text-ink placeholder:text-muted disabled:opacity-60";

@@ -2,7 +2,7 @@
 
 A mobile-first web app that replaces the paper register for small water supply businesses in Pakistan. It records bottles delivered, empties collected and payments received, and works out each customer's balance.
 
-**Status:** Phases 1–4 are built: login, a database where each business sees only its own data, customers, floor prices, daily bottle entries, payments and the customer register. Phase 5 (summary and CSV export) is next.
+**Status:** Phases 1–5 are built: login, a database where each business sees only its own data, customers, floor prices, daily bottle entries, payments, the customer register, the monthly summary and CSV backup. Phase 6 (installable app, backups, production launch) is next.
 
 ## Docs
 | Doc | What it covers |

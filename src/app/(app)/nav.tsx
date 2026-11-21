@@ -19,7 +19,7 @@ export function Nav() {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-4 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:inset-y-0 lg:right-auto lg:w-56 lg:auto-rows-min lg:grid-cols-1 lg:gap-1 lg:border-t-0 lg:border-r lg:p-3"
+      className="fixed inset-x-0 bottom-0 z-10 grid print:hidden grid-cols-4 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:inset-y-0 lg:right-auto lg:w-56 lg:auto-rows-min lg:grid-cols-1 lg:gap-1 lg:border-t-0 lg:border-r lg:p-3"
     >
       <div className="hidden items-center gap-2.5 px-2 pt-1 pb-5 font-display text-lg font-bold lg:flex">
         <span className="grid size-9 place-items-center rounded-lg bg-accent text-accent-ink">

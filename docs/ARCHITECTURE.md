@@ -75,10 +75,13 @@ audit_log    (id bigserial pk, business_id uuid, table_name text, row_id uuid,
 Views (calculated, never stored; see [BUSINESS_RULES.md](BUSINESS_RULES.md#calculations)). All of them use `security_invoker`, so RLS still applies:
 - `customer_list` (built in Phase 2): every customer column plus the current `rate`, the `balance` and `bottles_at_home`.
 - The register (running balance, monthly statement, bill status) is calculated in `src/lib/ledger.ts` from the customer's rows. These are pure functions covered by the money test. This replaced the planned `ledger_lines` and `monthly_statements` views: no extra migration was needed, and the money test runs without a database. `customer_list` and `ledger.ts` use the same formula, and both are tested.
-- `ledger_lines`: deliveries and payments merged, with a running balance from a window function.
-- `monthly_statements`: opening, bottles, empties, billed, paid, closing, and the bill's `paid_for` and `left`, per customer per month.
+- Functions for the Summary screen (Phase 5, `security invoker`). These run in the database because an API request returns at most 1000 rows, and a business-wide month has more rows than that:
+  - `month_summary(month)`: per customer, the brought-forward balance, bottles, empties, billed, paid and closing. `tests/rls.test.mjs` checks that it matches `ledger.ts` on the money fixture.
+  - `month_collections(month)`: money received, by payment method.
+  - `first_activity()`: the earliest entry date, used to build the month picker.
+- CSV export (`/export?type=customers|register|month`) reads rows 1000 at a time, so nothing is cut off.
 
-At about 100 customers × 30 rows a month, plain views are fast enough. If they ever get slow, add a materialized monthly table then.
+At about 100 customers × 30 rows a month, this is fast enough. If it ever gets slow, add a materialized monthly table then.
 
 ## Validation (three layers)
 1. **In the browser:** HTML `required`/`inputMode`, plus live checks in the form (duplicate address, floor price preview).

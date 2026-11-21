@@ -42,7 +42,7 @@ export function CustomerLedger({
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-2 gap-2.5 print:hidden">
         <button onClick={() => setOpen({ kind: "bottle" })} disabled={!customer.active} className={`${btnPrimary} min-h-14 text-[17px]`}>
           Bottles
         </button>
@@ -51,7 +51,7 @@ export function CustomerLedger({
         </button>
       </div>
 
-      <div role="group" aria-label="Month" className="flex gap-2 overflow-x-auto pb-0.5">
+      <div role="group" aria-label="Month" className="flex gap-2 overflow-x-auto pb-0.5 print:hidden">
         {months.map((m) => (
           <button
             key={m}
@@ -92,7 +92,10 @@ export function CustomerLedger({
         ))}
         <Row fixed date="" what="Closing balance" running={N(s.closing)} runningClass={tone(s.closing)} />
       </section>
-      <p className="text-sm text-muted">Tap any line to correct it. Positive balance = customer owes you. Negative = advance.</p>
+      <p className="text-sm text-muted print:hidden">Tap any line to correct it. Positive balance = customer owes you. Negative = advance.</p>
+      <button onClick={() => window.print()} className={`${btn} print:hidden`}>
+        Print or save {fmtMonth(month)} statement as PDF
+      </button>
 
       {open?.kind === "bottle" && (
         <BottleSheet

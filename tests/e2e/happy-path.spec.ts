@@ -40,13 +40,13 @@ test("owner records bottles end to end", async ({ page }) => {
   await expect(page.getByText("No active customers yet")).toBeVisible();
 
   // Settings: 2nd floor costs Rs 120
-  await page.getByRole("link", { name: "Settings" }).click();
+  await page.getByRole("link", { name: "Settings", exact: true }).click();
   await page.getByLabel("2nd floor", { exact: true }).fill("120");
   await page.getByRole("button", { name: "Save settings" }).click();
   await expect(page.getByText("Saved. New prices apply to new entries.")).toBeVisible();
 
   // Add a customer
-  await page.getByRole("link", { name: "Customers" }).click();
+  await page.getByRole("link", { name: "Customers", exact: true }).click();
   await page.getByRole("link", { name: "Add first customer" }).click();
   await page.getByLabel("House / Flat no *").fill("12-B");
   await page.getByLabel("Floor *").selectOption("2nd");
@@ -71,7 +71,7 @@ test("owner records bottles end to end", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Save customer" })).toBeDisabled();
 
   // Today: usual 2 is only a suggestion until ✓
-  await page.getByRole("link", { name: "Today" }).click();
+  await page.getByRole("link", { name: "Today", exact: true }).click();
   await expect(page.getByText("Rs 0", { exact: true })).toBeVisible(); // nothing billed yet
   await page.getByRole("button", { name: "Save 2 bottles for 12-B · 2nd floor" }).click();
   await expect(page.getByText("Saved 2 bottles, 2 empties back · 12-B · 2nd floor")).toBeVisible();
@@ -149,7 +149,7 @@ test("owner records bottles end to end", async ({ page }) => {
   await page.getByText("Pay per delivery").click();
   await page.getByRole("button", { name: "Save customer" }).click();
   await expect(page.getByRole("heading", { name: "14 · 1st floor" })).toBeVisible();
-  await page.getByRole("link", { name: "Today" }).click();
+  await page.getByRole("link", { name: "Today", exact: true }).click();
   await page.getByRole("button", { name: "One more", exact: true }).click(); // 14 is the only customer left to enter
   await page.getByRole("button", { name: "Save 1 bottle for 14 · 1st floor" }).click();
   await page.getByRole("button", { name: "Paid Rs 100" }).click();
@@ -157,4 +157,27 @@ test("owner records bottles end to end", async ({ page }) => {
   // Today: billed 240 + 100 = 340; collected 240 (monthly bill paid today) + 100 (daily) = 340
   await expect(page.getByText("collected of Rs 340")).toBeVisible();
   await expect(page.getByText("Rs 340", { exact: true })).toBeVisible();
+
+  // Summary for this month: 3 bottles, Rs 340 billed and collected; still to collect = 12-B's old Rs 500
+  await page.getByRole("link", { name: "Summary", exact: true }).click();
+  await expect(page.getByText("bottles delivered")).toBeVisible();
+  const tile = (label: string) => page.locator("div").filter({ has: page.getByText(label, { exact: true }) }).last();
+  await expect(tile("bottles delivered")).toContainText("3");
+  await expect(tile("billed")).toContainText("Rs 340");
+  await expect(tile("collected")).toContainText("Rs 340");
+  await expect(page.getByText(/still to collect/).locator("..")).toContainText("Rs 500");
+  await expect(page.getByRole("row", { name: /12-B · 2nd floor/ })).toContainText("500");
+
+  // Month CSV downloads with the right rows
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: /^Download .* as CSV$/ }).click()]);
+  expect(download.suggestedFilename()).toMatch(/^paani-register-summary-\d{4}-\d{2}\.csv$/);
+  const csv = await (await download.createReadStream()).toArray().then((c) => Buffer.concat(c).toString("utf8"));
+  expect(csv).toContain('"house_no","floor","area"');
+  expect(csv).toMatch(/"12-B","2nd","Gulshan St 4","Tariq Mehmood",500,2,1,240,240,500/);
+
+  // Full backup from Settings
+  await page.getByRole("link", { name: "Settings", exact: true }).click();
+  const [backup] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: "Download all bottles and payments (CSV)" }).click()]);
+  const reg = await (await backup.createReadStream()).toArray().then((c) => Buffer.concat(c).toString("utf8"));
+  expect(reg.trim().split("\r\n")).toHaveLength(1 + 2 + 2); // header + 2 bottle entries + 2 payments (deleted ones excluded)
 });

@@ -64,7 +64,7 @@ Each phase ends with a preview deploy and the checks listed for it.
   - No double-counted payments.
 - **Deliverable:** the Customer ledger screen.
 
-### Phase 5 — Summary and export
+### Phase 5 — Summary and export ✅ (database and browser tests passing)
 - **Goal:** month-end in one screen.
 - **Features:**
   - Today totals.

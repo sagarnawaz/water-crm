@@ -139,6 +139,41 @@ test("customer_list: balance and bottles at home are calculated, deleted rows ex
   assert.equal(other.length, 0, "the view must respect RLS");
 });
 
+test("month_summary in the database matches the app's register (money fixture)", { skip }, async () => {
+  const { data: c } = await A.client
+    .from("customers")
+    .insert({ house_no: "M-1", floor: "1st", area: "Money Street", opening_balance: 600, opening_bottles: 2 })
+    .select("id")
+    .single();
+  const d = (date, qty, e, rate) => ({ id: randomUUID(), customer_id: c.id, date, qty, empties_returned: e, rate });
+  const p = (date, amount, for_month) => ({ id: randomUUID(), customer_id: c.id, date, amount, method: "cash_owner", for_month });
+  const entries = [d("2026-10-05", 2, 2, 110), d("2026-10-20", 3, 2, 110), d("2026-10-25", 5, 0, 110), d("2026-11-12", 2, 2, 120), d("2026-11-12", 1, 0, 120), d("2026-11-15", 0, 2, 120)];
+  const payments = [p("2026-11-02", 400, "2026-10-01"), p("2026-11-18", 1500, "2026-11-01")];
+  assert.ifError((await A.client.from("deliveries").insert(entries)).error);
+  assert.ifError((await A.client.from("payments").insert(payments)).error);
+  await A.client.from("deliveries").update({ deleted_at: new Date().toISOString() }).eq("id", entries[2].id);
+
+  const { statement } = await import("../src/lib/ledger.ts");
+  const live = entries.filter((_, i) => i !== 2).map((e) => ({ ...e, amount: e.qty * e.rate }));
+  for (const month of ["2026-10", "2026-11"]) {
+    const { data, error } = await A.client.rpc("month_summary", { p_month: month + "-01" });
+    assert.ifError(error);
+    const row = data.find((r) => r.customer_id === c.id);
+    const s = statement(600, live, payments, month);
+    assert.deepEqual(
+      { opening: row.opening, bottles: row.bottles, empties: row.empties, billed: row.billed, paid: row.paid, closing: row.closing },
+      { opening: s.opening, bottles: s.bottles, empties: s.empties, billed: s.billed, paid: s.paid, closing: s.closing },
+      month,
+    );
+  }
+  // October 1150 → November −390 (advance), same as tests/ledger.test.ts
+  const nov = (await A.client.rpc("month_summary", { p_month: "2026-11-01" })).data.find((r) => r.customer_id === c.id);
+  assert.equal(nov.closing, -390);
+
+  const { data: other } = await B.client.rpc("month_summary", { p_month: "2026-11-01" });
+  assert.ok(!other.some((r) => r.customer_id === c.id), "B must not see A's summary");
+});
+
 test("logged-out visitors read nothing", { skip }, async () => {
   const anon = createClient(URL, ANON, opts);
   const { data } = await anon.from("customers").select("id");

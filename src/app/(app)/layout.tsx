@@ -23,7 +23,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <Nav />
-      <div className="pb-24 lg:ml-56 lg:pb-10">{children}</div>
+      <div className="pb-24 lg:ml-56 lg:pb-10 print:ml-0 print:pb-0">{children}</div>
     </>
   );
 }
