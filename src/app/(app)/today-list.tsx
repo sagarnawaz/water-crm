@@ -7,6 +7,7 @@ import { Toast, useToast } from "@/components/toast";
 import { customerLabel, floorText, rs, type Customer } from "@/lib/customers";
 import { bottles, MAX_QTY, newId, type Delivery } from "@/lib/deliveries";
 import { addDelivery, deleteDelivery } from "./delivery-actions";
+import { addPayment } from "./payment-actions";
 
 type Tab = "pending" | "done" | "all";
 type Sheet = { customer: Customer; entry?: Delivery } | null;
@@ -49,11 +50,13 @@ export function TodayList({
   today,
   customers,
   deliveries,
+  collected,
 }: {
   day: string;
   today: string;
   customers: Customer[];
   deliveries: Delivery[];
+  collected: number;
 }) {
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<Tab>("pending");
@@ -103,10 +106,18 @@ export function TodayList({
       setPending((p) => p.filter((x) => x.id !== entry.id));
       return show(res.error);
     }
-    show(`Saved ${bottles(qty)}, ${qty} empties back · ${customerLabel(c)}`, [
+    const actions = [
       { label: "Change", run: () => setSheet({ customer: c, entry }) },
       { label: "Undo", run: () => undo(entry) },
-    ]);
+    ];
+    // Daily customers usually pay on the spot: one tap records it as cash to rider.
+    if (c.billing_type === "daily") actions.unshift({ label: `Paid ${rs(entry.amount)}`, run: () => payNow(c, entry) });
+    show(`Saved ${bottles(qty)}, ${qty} empties back · ${customerLabel(c)}`, actions);
+  }
+
+  async function payNow(c: Customer, entry: Delivery) {
+    const res = await addPayment(newId(), c.id, { date: day, amount: entry.amount, method: "cash_rider", forMonth: null, note: null });
+    show(res.error ?? `Payment ${rs(entry.amount)} saved · Cash to rider`);
   }
 
   async function undo(entry: Delivery) {
@@ -134,7 +145,7 @@ export function TodayList({
     <>
       <div className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-line bg-line">
         <Stat value={String(totalQty)} label={`delivered · ${totalEmpties} empties back`} />
-        <Stat value={rs(totalAmount)} label="billed" />
+        <Stat value={rs(collected)} label={`collected of ${rs(totalAmount)}`} />
         <Stat value={String(todo.length)} label="not entered yet" />
       </div>
 

@@ -19,7 +19,7 @@ export default async function TodayPage(props: PageProps<"/">) {
   const isToday = day === today;
 
   const supabase = await createClient();
-  const [customers, { data: deliveries, error }] = await Promise.all([
+  const [customers, { data: deliveries, error }, { data: paid }] = await Promise.all([
     listCustomers(supabase),
     supabase
       .from("deliveries")
@@ -27,6 +27,7 @@ export default async function TodayPage(props: PageProps<"/">) {
       .eq("date", day)
       .is("deleted_at", null)
       .order("created_at"),
+    supabase.from("payments").select("amount").eq("date", day).is("deleted_at", null),
   ]);
   if (error) throw error;
 
@@ -57,6 +58,7 @@ export default async function TodayPage(props: PageProps<"/">) {
         today={today}
         customers={customers.filter((c) => c.active)}
         deliveries={(deliveries ?? []) as Delivery[]}
+        collected={(paid ?? []).reduce((s, p) => s + p.amount, 0)}
       />
     </Screen>
   );

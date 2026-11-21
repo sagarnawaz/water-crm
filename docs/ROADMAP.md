@@ -51,7 +51,7 @@ Each phase ends with a preview deploy and the checks listed for it.
   - Same-day adds merge into one entry.
 - **Deliverable:** the Today screen.
 
-### Phase 4 — Payments and ledger
+### Phase 4 — Payments and ledger ✅ (money test and browser test passing)
 - **Goal:** every customer has a correct register.
 - **Features:**
   - Payment sheet.
@@ -92,9 +92,9 @@ Each phase ends with a preview deploy and the checks listed for it.
 ## Tests (keep small)
 | Test | Covers | Tool |
 |---|---|---|
-| Money test | The fixture in [BUSINESS_RULES.md](BUSINESS_RULES.md#money-test-fixture-must-pass-before-every-release): balances, statements, price change, empties, soft delete, advance | SQL against a local Supabase, run by Vitest |
-| RLS test | Business A can't select, insert, update or delete rows of business B | Vitest + two test users |
-| Happy path | At 360px: login → confirm 3 deliveries → add a payment → ledger balance is right | Playwright |
+| Money test | The fixture in [BUSINESS_RULES.md](BUSINESS_RULES.md#money-test-fixture-must-pass-before-every-release): balances, statements, price change, empties, soft delete, advance, bill status | `tests/ledger.test.ts` (`npm test`) |
+| RLS test | Business A can't select, insert, update or delete rows of business B; balance view | `tests/rls.test.mjs` (`npm run test:db`) |
+| Happy path | At 360px: login, prices, customers, Today, edits, payments, daily "Paid" | `tests/e2e/happy-path.spec.ts` (`npm run test:e2e`) |
 | UAT | One week with a real supplier alongside their paper register | Manual |
 
-CI runs the money and RLS tests on every PR. Playwright runs before each production deploy.
+CI runs the money and RLS tests on every PR. Playwright runs before each production deploy. If `npm run dev` is already running, use `E2E_PORT=3000 npm run test:e2e`.

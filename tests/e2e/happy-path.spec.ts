@@ -104,4 +104,57 @@ test("owner records bottles end to end", async ({ page }) => {
   await page.getByRole("dialog").getByRole("button", { name: "Tap again to delete" }).click();
   await expect(page.getByText("Entry deleted.")).toBeVisible();
   await expect(page.getByText("Rs 740", { exact: true })).toBeVisible();
+
+  // Monthly customer pays this month's bill (Rs 240) online → balance back to the old Rs 500
+  const balanceCard = page.locator("section").first();
+  await page.getByRole("button", { name: "Payment", exact: true }).click();
+  const pay = page.getByRole("dialog");
+  await expect(pay.getByRole("radiogroup", { name: "Which month's bill?" })).toBeVisible();
+  await pay.getByRole("button", { name: /bill Rs 240$/ }).click();
+  await pay.getByRole("radio", { name: "Online to owner" }).click();
+  await pay.getByLabel("Note (optional)").fill("JazzCash 4471");
+  await expect(pay.getByText("Rs 500 due")).toBeVisible(); // "after this payment" preview
+  await pay.getByRole("button", { name: "Save payment" }).click();
+  await expect(page.getByText(/Payment Rs 240 saved for \w+ \d{4} · Online to owner/)).toBeVisible();
+  await expect(balanceCard).toContainText("Rs 500");
+  await expect(page.getByText("Paid ✓")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Payment For \w+ \d{4} · Online to owner · JazzCash 4471/ })).toBeVisible();
+
+  // A large amount needs a second tap; then correct it to Rs 1,000 → Rs 500 advance; then delete it
+  await page.getByRole("button", { name: "Payment", exact: true }).click();
+  await pay.getByLabel("Amount received (Rs)").fill("60000");
+  await pay.getByRole("button", { name: "Save payment" }).click();
+  await expect(pay.getByText("Rs 60,000 is a large amount. Tap the button again to confirm.")).toBeVisible();
+  await pay.getByRole("button", { name: "Yes, save Rs 60,000" }).click();
+  await expect(balanceCard).toContainText("Rs 59,500");
+  await expect(balanceCard).toContainText("Advance paid");
+  await page.getByRole("button", { name: /^\d+ \w+ Payment .*Cash to owner/ }).click();
+  await pay.getByLabel("Amount received (Rs)").fill("1000");
+  await pay.getByRole("button", { name: "Save changes" }).click();
+  await expect(balanceCard).toContainText("Rs 500");
+  await expect(balanceCard).toContainText("Advance paid");
+  await page.getByRole("button", { name: /^\d+ \w+ Payment .*Cash to owner/ }).click();
+  await pay.getByRole("button", { name: "Delete this payment" }).click();
+  await pay.getByRole("button", { name: "Tap again to delete" }).click();
+  await expect(page.getByText("Payment deleted.")).toBeVisible();
+  await expect(balanceCard).toContainText("Balance due");
+  await expect(balanceCard).toContainText("Rs 500");
+
+  // Daily customer: deliver on Today, then one tap on "Paid" in the message
+  await page.goto("/customers/new");
+  await page.getByLabel("House / Flat no *").fill("14");
+  await page.getByLabel("Floor *").selectOption("1st");
+  await page.getByLabel("Area / Street *").fill("Gulshan St 4");
+  await page.getByText("More details (optional)").click();
+  await page.getByText("Pay per delivery").click();
+  await page.getByRole("button", { name: "Save customer" }).click();
+  await expect(page.getByRole("heading", { name: "14 · 1st floor" })).toBeVisible();
+  await page.getByRole("link", { name: "Today" }).click();
+  await page.getByRole("button", { name: "One more", exact: true }).click(); // 14 is the only customer left to enter
+  await page.getByRole("button", { name: "Save 1 bottle for 14 · 1st floor" }).click();
+  await page.getByRole("button", { name: "Paid Rs 100" }).click();
+  await expect(page.getByText("Payment Rs 100 saved · Cash to rider")).toBeVisible();
+  // Today: billed 240 + 100 = 340; collected 240 (monthly bill paid today) + 100 (daily) = 340
+  await expect(page.getByText("collected of Rs 340")).toBeVisible();
+  await expect(page.getByText("Rs 340", { exact: true })).toBeVisible();
 });

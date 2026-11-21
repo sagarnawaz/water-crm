@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ComingSoon, iconBtn, Screen } from "@/components/screen";
+import { iconBtn, Screen } from "@/components/screen";
 import { customerLabel, floorText, rs, type Customer } from "@/lib/customers";
 import { createClient } from "@/lib/supabase/server";
 import { todayPK } from "@/lib/dates";
-import type { Delivery } from "@/lib/deliveries";
-import { CustomerEntries } from "./entries";
+import type { Entry } from "@/lib/ledger";
+import type { Payment } from "@/lib/payments";
+import { CustomerLedger } from "./ledger";
 
 const editIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-5.5" aria-hidden>
@@ -15,18 +16,23 @@ const editIcon = (
 
 export default async function CustomerPage(props: PageProps<"/customers/[id]">) {
   const { id } = await props.params;
+  const month = (await props.searchParams).month;
   const supabase = await createClient();
   const today = todayPK();
-  const [{ data }, { data: entries }] = await Promise.all([
+  // ponytail: loads the customer's whole history (about 30 rows a month). Load one month at a time
+  // if a customer ever has years of daily entries and the page gets slow.
+  const [{ data }, { data: entries }, { data: payments }] = await Promise.all([
     supabase.from("customer_list").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("deliveries")
-      .select("id, customer_id, date, qty, empties_returned, rate, amount")
+      .select("id, customer_id, date, qty, empties_returned, rate, amount, created_at")
       .eq("customer_id", id)
-      .is("deleted_at", null)
-      .gte("date", today.slice(0, 7) + "-01")
-      .order("date")
-      .order("created_at"),
+      .is("deleted_at", null),
+    supabase
+      .from("payments")
+      .select("id, customer_id, date, amount, method, for_month, note, created_at")
+      .eq("customer_id", id)
+      .is("deleted_at", null),
   ]);
   if (!data) notFound();
   const c: Customer = data;
@@ -61,8 +67,14 @@ export default async function CustomerPage(props: PageProps<"/customers/[id]">) 
         </div>
       </section>
 
-      <CustomerEntries customer={c} entries={(entries ?? []) as Delivery[]} today={today} />
-      <ComingSoon phase={4} what="Payments, earlier months, and the full register with running balance." />
+      <CustomerLedger
+        key={typeof month === "string" ? month : "current"}
+        customer={c}
+        entries={(entries ?? []) as Entry[]}
+        payments={(payments ?? []) as Payment[]}
+        today={today}
+        initialMonth={typeof month === "string" ? month : today.slice(0, 7)}
+      />
     </Screen>
   );
 }

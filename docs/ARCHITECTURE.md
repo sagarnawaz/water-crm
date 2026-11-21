@@ -74,6 +74,7 @@ audit_log    (id bigserial pk, business_id uuid, table_name text, row_id uuid,
 
 Views (calculated, never stored; see [BUSINESS_RULES.md](BUSINESS_RULES.md#calculations)). All of them use `security_invoker`, so RLS still applies:
 - `customer_list` (built in Phase 2): every customer column plus the current `rate`, the `balance` and `bottles_at_home`.
+- The register (running balance, monthly statement, bill status) is calculated in `src/lib/ledger.ts` from the customer's rows. These are pure functions covered by the money test. This replaced the planned `ledger_lines` and `monthly_statements` views: no extra migration was needed, and the money test runs without a database. `customer_list` and `ledger.ts` use the same formula, and both are tested.
 - `ledger_lines`: deliveries and payments merged, with a running balance from a window function.
 - `monthly_statements`: opening, bottles, empties, billed, paid, closing, and the bill's `paid_for` and `left`, per customer per month.
 
