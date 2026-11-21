@@ -1,0 +1,50 @@
+# Nightly encrypted database backup, kept 30 days as a workflow artifact.
+# Needs two repository secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_DB_URL     Supabase → Connect → Session pooler connection string, with the DB password filled in
+#   BACKUP_PASSPHRASE   a long random passphrase; store it in a password manager too, or backups can't be opened
+# The dump is encrypted before upload because artifacts of a public repository can be downloaded by others.
+# Restore steps: docs/OPERATIONS.md#restore-a-backup
+name: Nightly database backup
+
+on:
+  schedule:
+    - cron: "0 21 * * *" # 02:00 Pakistan time
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Dump, check and encrypt
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DB_URL" ] || [ -z "$PASSPHRASE" ]; then
+            echo "::error::Add the SUPABASE_DB_URL and BACKUP_PASSPHRASE repository secrets."; exit 1
+          fi
+          day=$(date -u +%F)
+          # pg_dump 17 can dump Postgres 15 and 17 servers. App data and the owners' logins.
+          docker run --rm -e DB_URL postgres:17 sh -c '
+            pg_dump "$DB_URL" --schema=public --no-owner --no-privileges &&
+            pg_dump "$DB_URL" --data-only --table=auth.users --table=auth.identities --no-owner --no-privileges
+          ' > "paani-$day.sql"
+          # Refuse to upload an empty or broken dump.
+          grep -q "CREATE TABLE public.customers" "paani-$day.sql" || { echo "::error::Dump looks incomplete"; exit 1; }
+          echo "Dump size: $(du -h "paani-$day.sql" | cut -f1)"
+          gzip -9 "paani-$day.sql"
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" \
+              --symmetric --cipher-algo AES256 -o "paani-$day.sql.gz.gpg" "paani-$day.sql.gz"
+          rm "paani-$day.sql.gz"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: paani-backup-${{ github.run_id }}
+          path: paani-*.sql.gz.gpg
+          retention-days: 30
+          if-no-files-found: error

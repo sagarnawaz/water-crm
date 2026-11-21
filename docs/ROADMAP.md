@@ -75,7 +75,7 @@ Each phase ends with a preview deploy and the checks listed for it.
 - **Acceptance:** the month totals match the money test fixture and a hand-checked month.
 - **Deliverable:** the Summary screen.
 
-### Phase 6 — PWA and launch
+### Phase 6 — PWA and launch ✅ code done (Vercel deploy, backup secrets and one restore test are still to do — see OPERATIONS.md)
 - **Goal:** a production app installed on the owner's phone.
 - **Features:**
   - Manifest, icons and service worker.

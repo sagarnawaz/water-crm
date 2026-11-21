@@ -2,7 +2,7 @@
 
 A mobile-first web app that replaces the paper register for small water supply businesses in Pakistan. It records bottles delivered, empties collected and payments received, and works out each customer's balance.
 
-**Status:** Phases 1–5 are built: login, a database where each business sees only its own data, customers, floor prices, daily bottle entries, payments, the customer register, the monthly summary and CSV backup. Phase 6 (installable app, backups, production launch) is next.
+**Status:** All six MVP phases are built, including the installable app (PWA), offline page and encrypted nightly backups. Next: deploy to Vercel. See [docs/OPERATIONS.md](docs/OPERATIONS.md).
 
 ## Docs
 | Doc | What it covers |
@@ -12,6 +12,7 @@ A mobile-first web app that replaces the paper register for small water supply b
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Stack, database schema, tenancy, auth, backup, deploy |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Build phases, acceptance criteria, tests |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | What the owner confirmed and what is still open |
+| [docs/OPERATIONS.md](docs/OPERATIONS.md) | Deploy to Vercel, onboard a business, backups and restore |
 
 The clickable mockup is at https://claude.ai/artifact/YWB7tf3vvb9WEhe3gwmQ9Q. It is private, so ask the owner for access.
 
@@ -33,5 +34,6 @@ Needs Node 24+ and a free [Supabase](https://supabase.com) project. Use a separa
 | `npm run test:e2e` | Browser test at phone width: login → customer → bottles on Today → edit → delete (staging only; first run `npx playwright install chromium`) |
 | `npm run build` | Production build |
 | `npm run create-owner -- "Name" 03xx-xxxxxxx "password"` | Create a business and its owner login |
+| `npm run reset-password -- 03xx-xxxxxxx "new-password"` | Set a new password for an owner who forgot theirs |
 
 How login works: owners sign in with phone number + password. Supabase stores this as an email-style login (`923001234567@phone.paani-register.app`), so no SMS provider is needed and nothing is paid per login. No email is ever sent to that address.

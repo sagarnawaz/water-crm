@@ -34,5 +34,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|ico|webmanifest)$).*)"],
+  // Public files: static assets, icons, manifest, the service worker and the offline page.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|sw.js|offline.html|.*\\.(?:svg|png|jpg|ico|webmanifest)$).*)"],
 };

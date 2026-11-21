@@ -89,14 +89,16 @@ At about 100 customers × 30 rows a month, this is fast enough. If it ever gets 
 3. **In the database:** checks, unique indexes and RLS as the final safety net.
 
 ## PWA and offline
-- Web manifest, icons, and a minimal service worker that caches the app shell. Installable on Android Chrome and iOS Safari.
-- **Phase 1 is online-only for saving.** Pages already loaded can still be viewed. When offline, the save buttons are disabled and an "Offline" banner is shown.
+- Web manifest (`src/app/manifest.ts`) and icons (`public/icons/`, made by `scripts/make-icons.mjs`), so the app can be installed on Android Chrome and iOS Safari.
+- A minimal service worker (`public/sw.js`) that only serves `public/offline.html` when a page can't load. It deliberately caches **no app pages or customer data**, so nothing private stays on a lost or shared phone.
+- **Online-only for saving.** A red "No internet" banner appears while offline (`src/components/connection.tsx`). Saving then fails with a clear message, and nothing is lost.
+- Security headers in `next.config.ts`: no framing, `nosniff`, a strict referrer policy, HSTS, and camera, microphone and location turned off.
 - Later: an IndexedDB outbox for offline entries. Client UUIDs are already the primary keys, so replaying saved entries can't create duplicates.
 
 ## Backup and data protection
-- On the free tier, a nightly `pg_dump` runs from a GitHub Action to private storage, kept for 30 days. On the paid tier, Supabase daily backups.
+- A nightly `pg_dump` (`.github/workflows/backup.yml`) is **encrypted with AES-256** and kept 30 days as a workflow artifact. It is encrypted because the repo is public. On the paid tier, Supabase also takes daily backups.
 - The owner has a **CSV export** of all customers, entries and payments in Settings.
-- A restore is tested once before launch.
+- A restore is tested once before launch. Steps are in [OPERATIONS.md](OPERATIONS.md#5-restore-a-backup).
 - Secrets are kept only in Vercel and GitHub environment settings. The service-role key never reaches the browser.
 
 ## Deployment
